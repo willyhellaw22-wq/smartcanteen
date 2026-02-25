@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kantin SMAN 94 Jakarta</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏫</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #0a0a0a 0%, #0d1b2a 50%, #1b263b 100%); min-height: 100vh; background-attachment: fixed; color: #ffffff; }
+        
+        .login-modal { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(10px); }
+        .login-modal.hidden { display: none; }
+        .login-content { background: linear-gradient(145deg, #1b263b 0%, #0d1b2a 100%); border-radius: 25px; padding: 40px; max-width: 90%; width: 400px; box-shadow: 0 20px 60px rgba(0, 191, 255, 0.3); border: 3px solid #00BFFF; text-align: center; }
+        .login-content h2 { color: #00BFFF; margin-bottom: 10px; font-size: 1.8rem; }
+        .login-content p { color: #87CEEB; margin-bottom: 25px; font-size: 0.9rem; }
+        
+        .login-btn { width: 100%; padding: 18px; margin-bottom: 15px; border-radius: 20px; cursor: pointer; font-weight: 700; font-size: 1.1rem; transition: all 0.3s ease; border: 3px solid; }
+        .login-btn.student { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: #ffffff; border-color: #28a745; }
+        .login-btn.seller { background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; border-color: #00BFFF; }
+        .login-btn.admin { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #000000; border-color: #FFD700; }
+        .login-btn small { display: block; font-size: 0.75rem; font-weight: 400; margin-top: 5px; opacity: 0.8; }
+        
+        .login-form { margin-top: 20px; padding-top: 20px; border-top: 2px solid #2d3e50; display: none; }
+        .login-form.active { display: block; }
+        .login-form h3 { color: #00BFFF; margin-bottom: 15px; font-size: 1rem; }
+        .login-form select, .login-form input { width: 100%; padding: 15px; border: 2px solid #00BFFF; border-radius: 15px; font-size: 1rem; background: #0d1b2a; color: #ffffff; margin-bottom: 15px; }
+        .login-form .enter-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; border: none; border-radius: 20px; cursor: pointer; font-weight: 700; font-size: 1rem; }
+        .login-form .back-btn { background: none; border: none; color: #87CEEB; margin-top: 10px; cursor: pointer; font-size: 0.8rem; }
+        
+        .admin-badge { display: none; background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #000000; padding: 5px 12px; border-radius: 15px; font-size: 0.7rem; font-weight: bold; margin-left: 10px; }
+        .admin-badge.active { display: inline-block; }
+        
+        header { background: linear-gradient(135deg, #000000 0%, #0d1b2a 50%, #1e3a5f 100%); color: #00BFFF; padding: 25px 15px; text-align: center; box-shadow: 0 8px 32px rgba(0, 191, 255, 0.3); border-bottom: 3px solid #00BFFF; }
+        header h1 { font-size: 1.8rem; margin-bottom: 8px; color: #00BFFF; }
+        header p { font-size: 0.9rem; color: #87CEEB; }
+        
+        nav { background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%); padding: 12px 10px; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #00BFFF; gap: 8px; }
+        nav ul { list-style: none; display: flex; gap: 6px; flex-wrap: wrap; flex: 1; justify-content: center; }
+        nav a { text-decoration: none; color: #00BFFF; font-weight: 700; padding: 8px 10px; border-radius: 18px; background: linear-gradient(135deg, #1b263b 0%, #2d3e50 100%); cursor: pointer; border: 2px solid #00BFFF; font-size: 0.7rem; white-space: nowrap; position: relative; }
+        nav a.active { background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; }
+        
+        .store-badge { position: absolute; top: -6px; right: -6px; background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; border-radius: 50%; width: 18px; height: 18px; font-size: 0.6rem; display: none; align-items: center; justify-content: center; font-weight: bold; border: 2px solid #000000; }
+        .store-badge.active { display: flex; }
+        
+        .cart-btn { background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; border: 2px solid #00BFFF; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 6px; font-size: 0.75rem; }
+        .cart-count { background: #000000; color: #00BFFF; border-radius: 50%; padding: 2px 6px; font-size: 0.7rem; font-weight: bold; }
+        .logout-btn { background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%); color: #ffffff; border: 2px solid #DC143C; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: 700; font-size: 0.7rem; margin-left: 8px; }
+        
+        main { max-width: 1400px; margin: 20px auto; padding: 0 10px; }
+        
+        .sales-report { background: linear-gradient(145deg, #1b263b 0%, #0d1b2a 100%); border-radius: 15px; padding: 20px; margin-bottom: 20px; border: 2px solid #FFD700; display: none; }
+        .sales-report.active { display: block; }
+        .sales-report h2 { color: #FFD700; margin-bottom: 15px; font-size: 1.3rem; }
+        .sales-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .stat-card { background: linear-gradient(145deg, #2d3e50 0%, #1b263b 100%); padding: 15px; border-radius: 12px; text-align: center; border: 2px solid #00BFFF; }
+        .stat-card h4 { color: #87CEEB; font-size: 0.8rem; margin-bottom: 8px; }
+        .stat-card .amount { color: #00BFFF; font-size: 1.3rem; font-weight: bold; }
+        .stat-card .orders { color: #87CEEB; font-size: 0.8rem; margin-top: 5px; }
+        .total-sales { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #000000; padding: 15px; border-radius: 12px; text-align: center; margin-top: 15px; font-weight: bold; font-size: 1.2rem; }
+        
+        /* Recent Orders Section for Admin */
+        .recent-orders { background: linear-gradient(145deg, #1b263b 0%, #0d1b2a 100%); border-radius: 20px; margin-bottom: 20px; border: 2px solid #00BFFF; }
+        .recent-orders h2 { color: #00BFFF; margin-bottom: 15px; font-size: 1.3rem; }
+        .recent-order-card { background: linear-gradient(145deg, #2d3e50 0%, #1b263b 100%); border-radius: 10px; padding: 12px; margin-bottom: 10px; border: 1px solid #3d5a80; }
+        .recent-order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 5px; }
+        .recent-order-store { color: #00BFFF; font-weight: bold; font-size: 0.9rem; }
+        .recent-order-status { padding: 3px 8px; border-radius: 8px; font-size: 0.65rem; font-weight: bold; }
+        .recent-order-status.pending { background: #FFC107; color: #000000; }
+        .recent-order-status.ready { background: #28a745; color: #ffffff; }
+        .recent-order-items { font-size: 0.8rem; color: #87CEEB; }
+        
+        .store-section { background: linear-gradient(145deg, #1b263b 0%, #0d1b2a 100%); border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 2px solid #00BFFF; display: none; }
+        .store-section.active { display: block; }
+        .store-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 3px solid #00BFFF; }
+        .store-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: linear-gradient(135deg, #00BFFF, #1e90ff); border: 2px solid #00BFFF; }
+        .store-header h2 { color: #00BFFF; font-size: 1.1rem; }
+        .store-header p { color: #87CEEB; margin-top: 3px; font-size: 0.75rem; }
+        
+        .menu-grid { display: flex; flex-direction: column; gap: 10px; }
+        .menu-item { background: linear-gradient(145deg, #1b263b 0%, #0d1b2a 100%); border-radius: 10px; padding: 8px; display: flex; flex-direction: row; align-items: center; border: 1px solid #2d3e50; }
+        .menu-item:hover { border-color: #00BFFF; }
+        .menu-image { width: 55px; height: 55px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+        .menu-content { padding: 6px; flex: 1; text-align: left; min-width: 0; }
+        .menu-item h3 { color: #00BFFF; margin-bottom: 3px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .menu-item .price { background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; font-size: 0.7rem; font-weight: bold; margin-bottom: 4px; padding: 2px 8px; border-radius: 10px; display: inline-block; }
+        .add-to-cart { background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; border: none; padding: 5px 8px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.65rem; white-space: nowrap; flex-shrink: 0; }
+        
+        .stock-info { display: inline-block; margin-left: 8px; font-size: 0.7rem; padding: 2px 6px; border-radius: 8px; }
+        .stock-info.ready { background: #28a745; color: #ffffff; }
+        .stock-info.empty { background: #DC143C; color: #ffffff; }
+        
+        .cart-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
+        .cart-modal.active { display: flex; }
+        .cart-content { background: linear-gradient(145deg, #1b263b 0%, #0d1b2a 100%); border-radius: 20px; padding: 20px; max-width: 90%; width: 400px; max-height: 80vh; overflow-y: auto; border: 2px solid #00BFFF; }
+        .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px; border-bottom: 2px solid #00BFFF; }
+        .cart-header h2 { color: #00BFFF; font-size: 1.3rem; }
+        .close-cart { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #00BFFF; }
+        
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: linear-gradient(145deg, #2d3e50 0%, #1b263b 100%); border-radius: 10px; margin-bottom: 8px; border: 1px solid #3d5a80; }
+        .cart-item-info h4 { color: #00BFFF; margin-bottom: 3px; font-weight: 600; font-size: 0.85rem; }
+        .cart-item-info p { color: #87CEEB; font-size: 0.7rem; }
+        .cart-item-actions { display: flex; align-items: center; gap: 6px; }
+        .quantity-btn { background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .remove-item { background: linear-gradient(135deg, #8B0000 0%, #DC143C 100%); color: #ffffff; border: none; padding: 4px 8px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; }
+        
+        .order-section { background: linear-gradient(145deg, #1b263b 0%, #0d1b2a 100%); border-radius: 15px; padding: 20px; margin-bottom: 20px; border: 2px solid #00BFFF; display: none; }
+        .order-section.active { display: block; }
+        .order-section h2 { color: #00BFFF; margin-bottom: 15px; font-size: 1.3rem; }
+        .order-card { background: linear-gradient(145deg, #2d3e50 0%, #1b263b 100%); border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 2px solid #3d5a80; }
+        .order-card:hover { border-color: #00BFFF; }
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #3d5a80; flex-wrap: wrap; gap: 8px; }
+        .order-customer { color: #00BFFF; font-weight: bold; font-size: 1rem; }
+        .order-class { color: #87CEEB; font-size: 0.85rem; }
+        .order-items { margin: 10px 0; }
+        .order-item { display: flex; justify-content: space-between; padding: 5px 0; color: #ffffff; font-size: 0.9rem; }
+        .order-total { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #000000; padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; margin-top: 10px; }
+        .order-time { color: #87CEEB; font-size: 0.75rem; margin-top: 8px; }
+        .order-empty { text-align: center; padding: 30px; color: #87CEEB; }
+        
+        .stock-control { display: none; align-items: center; gap: 6px; margin-top: 10px; background: #0d1b2a; padding: 10px; border-radius: 8px; flex-wrap: wrap; }
+        .stock-control.active { display: flex; }
+        .stock-control label { color: #87CEEB; font-size: 0.7rem; width: 100%; margin-bottom: 5px; }
+        .stock-input { width: 50px !important; padding: 4px !important; border: 2px solid #00BFFF !important; border-radius: 8px !important; font-size: 0.75rem !important; background: #0d1b2a !important; color: #ffffff !important; text-align: center; }
+        .stock-btn { background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; border: none; padding: 4px 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 0.7rem; }
+        
+        .cart-total { text-align: center; padding: 15px; background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; border-radius: 15px; margin-bottom: 15px; }
+        .cart-total h3 { font-size: 1.2rem; }
+        .checkout-btn { background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; border: none; padding: 14px 25px; border-radius: 25px; cursor: pointer; font-weight: 700; font-size: 1rem; width: 100%; }
+        
+        .payment-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1001; justify-content: center; align-items: center; }
+        .payment-modal.active { display: flex; }
+        .payment-content { background: linear-gradient(145deg, #1b263b 0%, #0d1b2a 100%); border-radius: 20px; padding: 20px; max-width: 90%; width: 400px; max-height: 80vh; overflow-y: auto; border: 2px solid #00BFFF; }
+        
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; color: #00BFFF; margin-bottom: 5px; font-weight: 600; font-size: 0.85rem; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 2px solid #00BFFF; border-radius: 10px; font-size: 0.9rem; background: #0d1b2a; color: #ffffff; }
+        
+        .payment-buttons { display: flex; gap: 8px; }
+        .pay-btn { background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; border: none; padding: 12px 20px; border-radius: 25px; cursor: pointer; font-weight: 700; font-size: 0.95rem; flex: 1; }
+        .cancel-btn { background: linear-gradient(135deg, #2d3e50 0%, #1b263b 100%); color: #00BFFF; border: 2px solid #00BFFF; padding: 12px 18px; border-radius: 25px; cursor: pointer; font-weight: 700; font-size: 0.85rem; }
+        
+        .success-message { display: none; text-align: center; padding: 30px; }
+        .success-message.active { display: block; }
+        .success-icon { font-size: 3.5rem; margin-bottom: 15px; }
+        .success-message h2 { color: #00BFFF; margin-bottom: 10px; font-size: 1.4rem; }
+        .success-message p { color: #87CEEB; margin-bottom: 15px; font-size: 0.85rem; }
+        .success-message button { background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-weight: 700; }
+        
+        .empty-cart { text-align: center; padding: 30px; color: #87CEEB; }
+        .qr-container { text-align: center; background: linear-gradient(145deg, #2d3e50 0%, #1b263b 100%); padding: 12px; border-radius: 12px; margin-top: 8px; border: 2px solid #00BFFF; }
+        .qr-container img { width: 150px; height: 150px; border: 2px solid #00BFFF; padding: 6px; background: #ffffff; border-radius: 8px; }
+        
+        footer { background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%); color: #00BFFF; text-align: center; padding: 20px; margin-top: 40px; border-top: 3px solid #00BFFF; }
+        footer p { opacity: 0.9; margin-bottom: 6px; font-size: 0.8rem; }
+        
+        /* Student Order Status Section */
+        .my-orders { background: linear-gradient(145deg, #1b263b 0%, #0d1b2a 100%); border-radius: 15px; padding: 20px; margin-bottom: 20px; border: 2px solid #28a745; display: none; }
+        .my-orders.active { display: block; }
+        .my-orders h2 { color: #28a745; margin-bottom: 15px; font-size: 1.3rem; }
+        .my-order-card { background: linear-gradient(145deg, #2d3e50 0%, #1b263b 100%); border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 2px solid #3d5a80; position: relative; }
+        .my-order-card.ready { border-color: #28a745; }
+        .my-order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #3d5a80; }
+        .my-order-store { color: #00BFFF; font-weight: bold; font-size: 1rem; }
+        .my-order-status { padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; }
+        .my-order-status.pending { background: #FFC107; color: #000000; }
+        .my-order-status.ready { background: #28a745; color: #ffffff; }
+        
+        /* Ready button for seller */
+        .ready-btn { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: #ffffff; border: none; padding: 6px 12px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 0.75rem; margin-top: 8px; }
+        .ready-btn:hover { background: linear-gradient(135deg, #20c997 0%, #28a745 100%); }
+        
+        /* Order status styles */
+        .order-status { display: inline-block; padding: 4px 10px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; margin-left: 8px; }
+        .order-status.pending { background: #FFC107; color: #000000; }
+        .order-status.ready { background: #28a745; color: #ffffff; }
+        .order-status-btn { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: #ffffff; border: none; padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 0.8rem; margin-top: 10px; width: 100%; }
+        .order-status-btn:hover { background: linear-gradient(135deg, #20c997 0%, #28a745 100%); }
+        .order-status-btn:disabled { background: #6c757d; cursor: not-allowed; }
+        
+        /* Badge notification for ready orders */
+        .notification-badge { position: fixed; top: 20px; right: 20px; background: #28a745; color: #ffffff; padding: 15px 20px; border-radius: 10px; font-weight: bold; z-index: 3000; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.5); animation: slideIn 0.3s ease; cursor: pointer; }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        
+        /* Refresh button for students */
+        .refresh-btn { background: linear-gradient(135deg, #00BFFF 0%, #1e90ff 100%); color: #000000; border: none; padding: 8px 15px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 0.75rem; margin-left: 10px; }
+        
+        /* Auto refresh indicator */
+        .auto-refresh { display: inline-block; background: #28a745; color: #ffffff; padding: 4px 10px; border-radius: 10px; font-size: 0.65rem; margin-left: 10px; }
+        
+        /* New order notification */
+        .new-order-badge { position: fixed; top: 20px; left: 20px; background: #00BFFF; color: #000000; padding: 15px 20px; border-radius: 10px; font-weight: bold; z-index: 3000; box-shadow: 0 4px 15px rgba(0, 191, 255, 0.5); animation: pulse 1s infinite; cursor: pointer; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    </style>
+</head>
+<body>
+    <div class="login-modal" id="loginModal">
+        <div class="login-content">
+            <h2>🏫 Kantin SMAN 94</h2>
+            <p>Silakan pilih jenis akses:</p>
+            
+            <button class="login-btn student" onclick="loginAsStudent()">🎒 Saya Siswa <small>Pesan makanan dari kantin</small></button>
+            <button class="login-btn seller" onclick="showSellerLogin()">🛒 Saya Penjual <small>Kelola pesanan toko saya</small></button>
+            <button class="login-btn admin" onclick="showAdminLogin()">🎓 Pihak Sekolah <small>Lihat semua data penjualan</small></button>
+            
+            <div class="login-form" id="sellerLogin">
+                <h3>🔐 Login Penjual</h3>
+                <select id="sellerStore"><option value="">-- Pilih Kantin --</option><option value="Kantin Emak">🍜 Kantin Emak</option><option value="Kantin Umi">🍚 Kantin Umi</option><option value="Kantin Teteh">🍛 Kantin Teteh</option></select>
+                <input type="password" id="sellerCode" placeholder="Masukkan kode akses">
+                <button class="enter-btn" onclick="loginAsSeller()">Masuk</button>
+                <button class="back-btn" onclick="resetLogin()">← Kembali</button>
+            </div>
+            
+            <div class="login-form" id="adminLogin">
+                <h3>🔐 Login Pihak Sekolah</h3>
+                <input type="password" id="adminCode" placeholder="Masukkan kode akses sekolah">
+                <button class="enter-btn" onclick="loginAsAdmin()">Masuk</button>
+                <button class="back-btn" onclick="resetLogin()">← Kembali</button>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <h1>🏫 Kantin SMAN 94 <span class="admin-badge" id="adminBadge">🎓 SEKOLAH</span></h1>
+        <p>Selamat Datang<span id="welcomeName"></span>!<span class="auto-refresh" id="autoRefreshIndicator" style="display: none;">🔄 Auto-refresh: 5dt</span></p>
+    </header>
+
+    <nav>
+        <ul id="storeTabs">
+            <li><a onclick="showStore('toko1')" class="store-tab active" data-store="toko1">🍜 Emak <span class="store-badge" id="badge-toko1">0</span></a></li>
+            <li><a onclick="showStore('toko2')" class="store-tab" data-store="toko2">🍚 Umi <span class="store-badge" id="badge-toko2">0</span></a></li>
+            <li><a onclick="showStore('toko3')" class="store-tab" data-store="toko3">🍛 Teteh <span class="store-badge" id="badge-toko3">0</span></a></li>
+        </ul>
+        <div style="display: flex; align-items: center;">
+            <button class="cart-btn" onclick="openCart()">🛒 <span class="cart-count" id="cartCount">0</span></button>
+            <button class="logout-btn" id="logoutBtn" onclick="logout()" style="display: none;">Logout</button>
+        </div>
+    </nav>
+
+    <main>
+        <div class="sales-report" id="salesReport">
+            <h2>📊 Laporan Penjualan Seluruh Toko</h2>
+            <div class="sales-stats">
+                <div class="stat-card"><h4>🍜 Kantin Emak</h4><div class="amount" id="sales-emak">Rp 0</div><div class="orders" id="orders-emak">0 pesanan</div></div>
+                <div class="stat-card"><h4>🍚 Kantin Umi</h4><div class="amount" id="sales-umi">Rp 0</div><div class="orders" id="orders-umi">0 pesanan</div></div>
+                <div class="stat-card"><h4>🍛 Kantin Teteh</h4><div class="amount" id="sales-teteh">Rp 0</div><div class="orders" id="orders-teteh">0 pesanan</div></div>
+            </div>
+            <div class="total-sales">💰 Total Penjualan: Rp <span id="totalAllSales">0</span></div>
+        </div>
+
+        <!-- Recent Orders Section for Admin -->
+        <div class="recent-orders" id="recentOrders" style="display: none;">
+            <h2>📋 Pesanan Masuk Terbaru <button class="refresh-btn" onclick="renderRecentOrders()">🔄 Refresh</button></h2>
+            <div id="recentOrderList">
+                <div class="order-empty">Belum ada pesanan masuk</div>
+            </div>
+        </div>
+
+        <!-- Section Pesanan Masuk untuk Seller -->
+        <div class="order-section" id="orderSection">
+            <h2>📥 Daftar Pesanan Masuk <button class="refresh-btn" onclick="renderOrders()">🔄 Refresh</button></h2>
+            <div id="orderList">
+                <div class="order-empty">Belum ada pesanan masuk</div>
+            </div>
+        </div>
+
+        <!-- Section Pesanan Saya untuk Siswa -->
+        <div class="my-orders" id="myOrders">
+            <h2>📦 Pesanan Saya <button class="refresh-btn" onclick="renderMyOrders()">🔄 Refresh</button></h2>
+            <div id="myOrderList">
+                <div class="order-empty">Belum ada pesanan</div>
+            </div>
+        </div>
+
+        <section id="toko1" class="store-section store-1 active">
+            <div class="store-header"><div class="store-icon">🍜</div><div><h2>Kantin Emak</h2><p>😋 Makanan murah meriah</p></div></div>
+            <div class="menu-grid" id="menu-toko1">
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/files/1771898787175-c3841d6e-c52a-4fdc-a7b5-52a949393414.jfif" class="menu-image">
+                    <div class="menu-content">
+                        <h3>🍛 Nasi Goreng Katsu</h3>
+                        <div class="price">Rp 10.000</div>
+                        <span class="stock-info ready" id="stock-Nasi Goreng Katsu">Stok: 10</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Nasi Goreng Katsu', 10000, 'Kantin Emak')">+ Keranjang</button>
+                </div>
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/files/1771913296416-119f8095-3008-4e41-98fc-a438d249f300.jfif" class="menu-image">
+                    <div class="menu-content">
+                        <h3>🍣 Nasi Katsu Mentai</h3>
+                        <div class="price">Rp 10.000</div>
+                        <span class="stock-info ready" id="stock-Nasi Katsu Mentai">Stok: 10</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Nasi Katsu Mentai', 10000, 'Kantin Emak')">+ Keranjang</button>
+                </div>
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/files/1771913512516-b32d9e2d-8252-420f-a7df-4c75bd0e4bda.jfif" class="menu-image">
+                    <div class="menu-content">
+                        <h3>🍜 Indomie</h3>
+                        <div class="price">Rp 7.000</div>
+                        <span class="stock-info ready" id="stock-Indomie">Stok: 15</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Indomie', 7000, 'Kantin Emak')">+ Keranjang</button>
+                </div>
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/files/1771901814601-f6717d87-c279-48d1-b58b-7ccbf17df2b7.webp" class="menu-image">
+                    <div class="menu-content">
+                        <h3>💧 Le Minerale</h3>
+                        <div class="price">Rp 3.000</div>
+                        <span class="stock-info ready" id="stock-Le Minerale">Stok: 20</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Le Minerale', 3000, 'Kantin Emak')">+ Keranjang</button>
+                </div>
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/images/1771999226529-3153d5f2-7f3f-4c38-adcb-706840577122.jfif" class="menu-image">
+                    <div class="menu-content">
+                        <h3>💧 Teds </h3>
+                        <div class="price">Rp 5.000</div>
+                        <span class="stock-info ready" id="stock-Teds Kencur">Stok: 15</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Teds Kencur', 5000, 'Kantin Emak')">+ Keranjang</button>
+                </div>
+                <!-- Stock control for seller -->
+                <div class="stock-control" id="stock-control-toko1">
+                    <label>📦 Kelola Stok (Kantin Emak):</label>
+                    <input type="number" class="stock-input" id="stock-input-Nasi Goreng Katsu" value="10" min="0">
+                    <button class="stock-btn" onclick="updateStock('Nasi Goreng Katsu')">Update</button>
+                    <input type="number" class="stock-input" id="stock-input-Nasi Katsu Mentai" value="10" min="0">
+                    <button class="stock-btn" onclick="updateStock('Nasi Katsu Mentai')">Update</button>
+                    <input type="number" class="stock-input" id="stock-input-Indomie" value="15" min="0">
+                    <button class="stock-btn" onclick="updateStock('Indomie')">Update</button>
+                    <input type="number" class="stock-input" id="stock-input-Le Minerale" value="20" min="0">
+                    <button class="stock-btn" onclick="updateStock('Le Minerale')">Update</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="toko2" class="store-section store-2">
+            <div class="store-header"><div class="store-icon">🍚</div><div><h2>Kantin Umi</h2><p>🌟 Jajanan khas Bandung</p></div></div>
+            <div class="menu-grid" id="menu-toko2">
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/files/1771901938426-a7cf45de-c678-455d-8668-68a7e6ac5059.png" class="menu-image">
+                    <div class="menu-content">
+                        <h3>🍡 Bakso Goreng</h3>
+                        <div class="price">Rp 5.000</div>
+                        <span class="stock-info ready" id="stock-Bakso Goreng">Stok: 15</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Bakso Goreng', 5000, 'Kantin Umi')">+ Keranjang</button>
+                </div>
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/files/1771901983309-bc7cc486-32d2-4637-9777-1db00dc08cf7.jfif" class="menu-image">
+                    <div class="menu-content">
+                        <h3>🧈 Cibay</h3>
+                        <div class="price">Rp 5.000</div>
+                        <span class="stock-info ready" id="stock-Cibay">Stok: 15</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Cibay', 5000, 'Kantin Umi')">+ Keranjang</button>
+                </div>
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/images/1771902886610-38283d08-9943-438e-bdc7-98b872fbbf45.jfif" class="menu-image">
+                    <div class="menu-content">
+                        <h3>🌶️ Seblak</h3>
+                        <div class="price">Rp 10.000</div>
+                        <span class="stock-info ready" id="stock-Seblak">Stok: 10</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Seblak', 10000, 'Kantin Umi')">+ Keranjang</button>
+                </div>
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/images/1771999373559-5652475d-77da-484f-ac2c-dc1b2c5d40aa.jpeg" class="menu-image">
+                    <div class="menu-content">
+                        <h3>🥟 Cireng Kuah</h3>
+                        <div class="price">Rp 10.000</div>
+                        <span class="stock-info ready" id="stock-Cireng Kuah">Stok: 15</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Cireng Kuah', 5000, 'Kantin Umi')">+ Keranjang</button>
+                </div>
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/images/1771999498372-7a1f5fbd-a5de-43af-bead-c32ee29adbdb.jfif" class="menu-image">
+                    <div class="menu-content">
+                        <h3>🥟 Pangsit Rebus</h3>
+                        <div class="price">Rp 10.000</div>
+                        <span class="stock-info ready" id="stock-Pangsit Rebus">Stok: 10</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Pangsit Rebus', 7000, 'Kantin Umi')">+ Keranjang</button>
+                </div>
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/images/1771999568410-a818d462-d4a3-4712-baa2-bf872489be77.jpeg" class="menu-image">
+                    <div class="menu-content">
+                        <h3>🦪 Cuankie</h3>
+                        <div class="price">Rp 10.000</div>
+                        <span class="stock-info ready" id="stock-Cuankie">Stok: 12</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Cuankie', 6000, 'Kantin Umi')">+ Keranjang</button>
+                </div>
+                <div class="stock-control" id="stock-control-toko2">
+                    <label>📦 Kelola Stok (Kantin Umi):</label>
+                    <input type="number" class="stock-input" id="stock-input-Bakso Goreng" value="15" min="0">
+                    <button class="stock-btn" onclick="updateStock('Bakso Goreng')">Update</button>
+                    <input type="number" class="stock-input" id="stock-input-Cibay" value="15" min="0">
+                    <button class="stock-btn" onclick="updateStock('Cibay')">Update</button>
+                    <input type="number" class="stock-input" id="stock-input-Seblak" value="10" min="0">
+                    <button class="stock-btn" onclick="updateStock('Seblak')">Update</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="toko3" class="store-section store-3">
+            <div class="store-header"><div class="store-icon">🍛</div><div><h2>Kantin Teteh</h2><p>✨ Makanan lezat</p></div></div>
+            <div class="menu-grid" id="menu-toko3">
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/files/1771903135620-c088184c-1d8c-4b6d-a2cf-63e244bea9d5.jfif" class="menu-image">
+                    <div class="menu-content">
+                        <h3>🍗 Nasi Ayam Cabe Ijo</h3>
+                        <div class="price">Rp 10.000</div>
+                        <span class="stock-info ready" id="stock-Nasi Ayam Cabe Ijo">Stok: 10</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Nasi Ayam Cabe Ijo', 10000, 'Kantin Teteh')">+ Keranjang</button>
+                </div>
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/files/1771903178474-68907bc9-58d5-46b1-9ec1-6a1f658e3fc2.jfif" class="menu-image">
+                    <div class="menu-content">
+                        <h3>🍟 Gorengan</h3>
+                        <div class="price">Rp 1.500</div>
+                        <span class="stock-info ready" id="stock-Gorengan">Stok: 25</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Gorengan', 1500, 'Kantin Teteh')">+ Keranjang</button>
+                </div>
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/files/1771901814601-f6717d87-c279-48d1-b58b-7ccbf17df2b7.webp" class="menu-image">
+                    <div class="menu-content">
+                        <h3>💧 Le Minerale</h3>
+                        <div class="price">Rp 3.000</div>
+                        <span class="stock-info ready" id="stock-Le Minerale Teteh">Stok: 20</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Le Minerale Teteh', 3000, 'Kantin Teteh')">+ Keranjang</button>
+                </div>
+                <div class="menu-item">
+                    <img src="https://image2url.com/r2/default/images/1771999226529-f2-7f3f-4c38-ad3153d5cb-706840577122.jfif" class="menu-image">
+                    <div class="menu-content">
+                        <h3>💧 Teds</h3>
+                        <div class="price">Rp 2.000</div>
+                        <span class="stock-info ready" id="stock-Teds Teteh">Stok: 15</span>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('Teds Teteh', 5000, 'Kantin Teteh')">+ Keranjang</button>
+                </div>
+                <div class="stock-control" id="stock-control-toko3">
+                    <label>📦 Kelola Stok (Kantin Teteh):</label>
+                    <input type="number" class="stock-input" id="stock-input-Nasi Ayam Cabe Ijo" value="10" min="0">
+                    <button class="stock-btn" onclick="updateStock('Nasi Ayam Cabe Ijo')">Update</button>
+                    <input type="number" class="stock-input" id="stock-input-Gorengan" value="25" min="0">
+                    <button class="stock-btn" onclick="updateStock('Gorengan')">Update</button>
+                    <input type="number" class="stock-input" id="stock-input-Le Minerale Teteh" value="20" min="0">
+                    <button class="stock-btn" onclick="updateStock('Le Minerale Teteh')">Update</button>
+                    <input type="number" class="stock-input" id="stock-input-Teds Teteh" value="15" min="0">
+                    <button class="stock-btn" onclick="updateStock('Teds Teteh')">Update</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>📍 JL.Raya Semanan No.27, RT.4/RW.3</p>
+        <p>📞 Hubungi: +6289654487426</p>
+        <p>© 2024 Kantin SMAN 94 Jakarta</p>
+    </footer>
+
+    <div class="cart-modal" id="cartModal">
+        <div class="cart-content">
+            <div class="cart-header"><h2>🛒 Keranjang</h2><button class="close-cart" onclick="closeCart()">×</button></div>
+            <div class="cart-items" id="cartItems"><div class="empty-cart"><p>Keranjang masih kosong</p></div></div>
+            <div class="cart-total" id="cartTotal" style="display: none;"><h3>Total: Rp <span id="totalAmount">0</span></h3></div>
+            <button class="checkout-btn" id="checkoutBtn" onclick="openPayment()" style="display: none;">Bayar Sekarang</button>
+        </div>
+    </div>
+
+    <div class="payment-modal" id="paymentModal">
+        <div class="payment-content">
+            <div class="payment-header" id="paymentForm"><h2>💳 Pembayaran</h2><p>Silakan lengkapi data</p></div>
+            <div class="success-message" id="successMessage"><div class="success-icon">✅</div><h2>Pembayaran Berhasil!</h2><p>Terima kasih atas pesanan Anda!</p><button onclick="closePayment()">Pesan Lagi</button></div>
+            <div class="payment-summary" id="paymentSummary"><h3>Ringkasan Pesanan</h3><div id="orderSummary"></div><p><strong>Total: Rp <span id="payAmount">0</span></strong></p></div>
+            <form id="paymentFormData" onsubmit="processPayment(event)">
+                <div class="form-group"><label>Nama Pelanggan</label><input type="text" id="customerName" required placeholder="Nama Anda"></div>
+                <div class="form-group"><label>Nama Kelas</label><input type="text" id="customerClass" required placeholder="Contoh: XII IPA 1"></div>
+                <div class="form-group"><label>Catatan</label><input type="text" id="orderNotes" placeholder="Catatan (opsional)"></div>
+                <div class="form-group"><label>Metode Pembayaran</label>
+                    <select id="paymentMethod" required onchange="showQRISImage()">
+                        <option value="">Pilih metode</option>
+                        <option value="cash">💵 Tunai</option>
+                        <option value="qris">📱 QRIS</option>
+                        <option value="dana">📲 DANA (+6289654487426)</option>
+                        <option value="gopay">🚗 GoPay (+62895403143831)</option>
+                        <option value="ovo">📳 OVO (+6285779610256)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="qrisImageContainer" style="display: none;"><div class="qr-container"><label>📱 Scan QRIS</label><img src="https://image2url.com/r2/default/files/1771903647771-36931998-9989-4454-bd73-a783f716001a.jpeg" alt="QRIS"></div></div>
+                <div class="payment-buttons" id="paymentButtons"><button type="button" class="cancel-btn" onclick="closePayment()">Batal</button><button type="submit" class="pay-btn">Bayar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebase configuration - Ganti dengan konfigurasi Firebase Anda
+        const firebaseConfig = {
+            apiKey: "AIzaSyDemo-Kantin94",
+            authDomain: "kantin-sman94.firebaseapp.com",
+            databaseURL: "https://kantin-sman94-default-rtdb.firebaseio.com",
+            projectId: "kantin-sman94",
+            storageBucket: "kantin-sman94.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abc123def456"
+        };
+
+        // Initialize Firebase
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+        } catch (e) {
+            console.log('Firebase init error:', e);
+        }
+
+        let currentUser = null;
+        let cart = [];
+        let salesData = { "Kantin Emak": { total: 0, orders: 0 }, "Kantin Umi": { total: 0, orders: 0 }, "Kantin Teteh": { total: 0, orders: 0 } };
+        
+        // Data stok per item - default values
+        let stockData = {
+            "Nasi Goreng Katsu": 10,
+            "Nasi Katsu Mentai": 10,
+            "Indomie": 15,
+            "Le Minerale": 20,
+            "Teds Kencur": 15,
+            "Bakso Goreng": 15,
+            "Cibay": 15,
+            "Seblak": 10,
+            "Cireng Kuah": 15,
+            "Pangsit Rebus": 10,
+            "Cuankie": 12,
+            "Nasi Ayam Cabe Ijo": 10,
+            "Gorengan": 25,
+            "Le Minerale Teteh": 20,
+            "Teds Teteh": 15
+        };
+        
+        // Data pesanan masuk - menggunakan Firebase untuk sinkronisasi lintas device
+        let orders = [];
+        let lastOrderCount = 0;
+        
+        // Auto-refresh interval
+        let autoRefreshInterval = null;
+
+        const ADMIN_CODE = "SEKOLAH94";
+        const SELLER_CODES = { "Kantin Emak": "EMAK94", "Kantin Umi": "UMI94", "Kantin Teteh": "TETEH94" };
+
+        // Load data from Firebase (cloud) or localStorage (fallback)
+        function loadFromStorage() {
+            if (db) {
+                // Load from Firebase
+                db.ref('orders').once('value').then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        orders = Object.values(data);
+                        lastOrderCount = orders.length;
+                        renderOrdersIfNeeded();
+                    }
+                }).catch(e => console.log('Firebase read error:', e));
+                
+                db.ref('sales').once('value').then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        salesData = data;
+                        updateSalesReport();
+                    }
+                });
+                
+                db.ref('stock').once('value').then((snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        stockData = data;
+                        updateAllStockDisplays();
+                    }
+                });
+            } else {
+                // Fallback to localStorage
+                try {
+                    const savedOrders = localStorage.getItem('kantin94_orders');
+                    if (savedOrders) {
+                        orders = JSON.parse(savedOrders);
+                    }
+                    const savedSales = localStorage.getItem('kantin94_sales');
+                    if (savedSales) {
+                        salesData = JSON.parse(savedSales);
+                    }
+                    const savedStock = localStorage.getItem('kantin94_stock');
+                    if (savedStock) {
+                        stockData = JSON.parse(savedStock);
+                        updateAllStockDisplays();
+                    }
+                } catch (e) {
+                    console.log('Error loading from storage:', e);
+                }
+            }
+        }
+
+        // Save data to Firebase (cloud) and localStorage (backup)
+        function saveToStorage() {
+            // Always save to localStorage as backup
+            try {
+                localStorage.setItem('kantin94_orders', JSON.stringify(orders));
+                localStorage.setItem('kantin94_sales', JSON.stringify(salesData));
+                localStorage.setItem('kantin94_stock', JSON.stringify(stockData));
+            } catch (e) {
+                console.log('Error saving to localStorage:', e);
+            }
+            
+            // Save to Firebase for cross-device sync
+            if (db) {
+                db.ref('orders').set(orders).catch(e => console.log('Firebase write error:', e));
+                db.ref('sales').set(salesData).catch(e => console.log('Firebase write error:', e));
+                db.ref('stock').set(stockData).catch(e => console.log('Firebase write error:', e));
+            }
+        }
+        
+        // Listen for real-time updates from Firebase
+        function setupFirebaseListeners() {
+            if (!db) return;
+            
+            db.ref('orders').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const newOrders = Object.values(data);
+                    if (newOrders.length !== orders.length) {
+                        orders = newOrders;
+                        renderOrdersIfNeeded();
+                        if (currentUser && currentUser.role === 'student') {
+                            renderMyOrders();
+                        }
+                    }
+                }
+            });
+            
+            db.ref('sales').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    salesData = data;
+                    updateSalesReport();
+                }
+            });
+            
+            db.ref('stock').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    stockData = data;
+                    updateAllStockDisplays();
+                }
+            });
+        }
+        
+        // Render orders if user is seller or admin
+        function renderOrdersIfNeeded() {
+            if (currentUser) {
+                if (currentUser.role === 'seller') {
+                    renderOrders();
+                } else if (currentUser.role === 'admin') {
+                    renderRecentOrders();
+                } else if (currentUser.role === 'student') {
+                    renderMyOrders();
+                }
+            }
+        }
+
+        // Update all stock displays
+        function updateAllStockDisplays() {
+            for (const itemName in stockData) {
+                updateStockDisplay(itemName);
+            }
+        }
+
+        // Listen for storage changes (for cross-tab sync)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'kantin94_orders' || e.key === 'kantin94_sales' || e.key === 'kantin94_stock') {
+                loadFromStorage();
+                if (currentUser) {
+                    if (currentUser.role === 'seller') {
+                        const newOrderCount = orders.filter(o => o.store === currentUser.store).length;
+                        if (newOrderCount > lastOrderCount) {
+                            showNewOrderNotification();
+                        }
+                        lastOrderCount = newOrderCount;
+                        renderOrders();
+                    } else if (currentUser.role === 'admin') {
+                        updateSalesReport();
+                        renderRecentOrders();
+                    }
+                }
+            }
+        });
+
+        function showNewOrderNotification() {
+            const existingNotification = document.getElementById('newOrderNotification');
+            if (existingNotification) existingNotification.remove();
+            const notification = document.createElement('div');
+            notification.id = 'newOrderNotification';
+            notification.className = 'new-order-badge';
+            notification.innerHTML = '🔔 PESANAN BARU MASUK!';
+            notification.onclick = function() { this.remove(); };
+            document.body.appendChild(notification);
+            setTimeout(() => { const notif = document.getElementById('newOrderNotification'); if (notif) notif.remove(); }, 5000);
+        }
+
+        // Start auto-refresh
+        function startAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            document.getElementById('autoRefreshIndicator').style.display = 'inline-block';
+            
+            autoRefreshInterval = setInterval(() => {
+                loadFromStorage();
+                if (currentUser) {
+                    if (currentUser.role === 'seller') {
+                        const newOrderCount = orders.filter(o => o.store === currentUser.store).length;
+                        if (newOrderCount > lastOrderCount) {
+                            showNewOrderNotification();
+                        }
+                        lastOrderCount = newOrderCount;
+                        renderOrders();
+                    } else if (currentUser.role === 'admin') {
+                        updateSalesReport();
+                        renderRecentOrders();
+                    }
+                }
+            }, 5000); // Refresh every 5 seconds
+        }
+
+        // Stop auto-refresh
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+            document.getElementById('autoRefreshIndicator').style.display = 'none';
+        }
+
+        function showSellerLogin() {
+            document.querySelectorAll('.login-btn').forEach(btn => btn.style.display = 'none');
+            document.getElementById('sellerLogin').classList.add('active');
+        }
+
+        function showAdminLogin() {
+            document.querySelectorAll('.login-btn').forEach(btn => btn.style.display = 'none');
+            document.getElementById('adminLogin').classList.add('active');
+        }
+
+        function resetLogin() {
+            document.querySelectorAll('.login-btn').forEach(btn => btn.style.display = 'block');
+            document.getElementById('sellerLogin').classList.remove('active');
+            document.getElementById('adminLogin').classList.remove('active');
+        }
+
+        function loginAsStudent() {
+            loadFromStorage();
+            currentUser = { role: 'student', store: null };
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('logoutBtn').style.display = 'block';
+            document.getElementById('welcomeName').textContent = '';
+            document.getElementById('orderSection').classList.remove('active');
+            document.getElementById('myOrders').classList.add('active');
+            document.getElementById('recentOrders').style.display = 'none';
+            document.querySelectorAll('.store-section').forEach(s => s.classList.add('active'));
+            document.querySelectorAll('.store-tab').forEach(t => t.style.display = 'inline-block');
+            document.querySelectorAll('.stock-control').forEach(c => c.classList.remove('active'));
+            stopAutoRefresh();
+            setTimeout(() => renderMyOrders(), 500);
+        }
+
+        function loginAsSeller() {
+            loadFromStorage();
+            const store = document.getElementById('sellerStore').value;
+            const code = document.getElementById('sellerCode').value;
+            if (!store) { alert('Silakan pilih kantin Anda!'); return; }
+            if (SELLER_CODES[store] !== code) { alert('Kode akses salah!'); return; }
+            currentUser = { role: 'seller', store: store };
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('logoutBtn').style.display = 'block';
+            document.getElementById('welcomeName').textContent = ', ' + store;
+            document.getElementById('myOrders').classList.remove('active');
+            document.getElementById('recentOrders').style.display = 'none';
+            showStoreForSeller(store);
+            startAutoRefresh();
+            lastOrderCount = orders.filter(o => o.store === currentUser.store).length;
+        }
+
+        function loginAsAdmin() {
+            loadFromStorage();
+            setupFirebaseListeners(); // Aktifkan listener Firebase untuk sinkronisasi real-time ke pihak sekolah
+            const code = document.getElementById('adminCode').value;
+            if (ADMIN_CODE !== code) { alert('Kode akses sekolah salah!'); return; }
+            currentUser = { role: 'admin', store: null };
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('logoutBtn').style.display = 'block';
+            document.getElementById('adminBadge').classList.add('active');
+            document.getElementById('welcomeName').textContent = ', Admin';
+            document.getElementById('salesReport').classList.add('active');
+            document.getElementById('recentOrders').style.display = 'block';
+            document.getElementById('orderSection').classList.remove('active');
+            document.getElementById('myOrders').classList.remove('active');
+            document.querySelectorAll('.store-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.store-tab').forEach(t => t.style.display = 'none');
+            updateSalesReport();
+            renderRecentOrders();
+            startAutoRefresh();
+        }
+
+        function logout() {
+            currentUser = null;
+            cart = [];
+            updateCartCount();
+            stopAutoRefresh();
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('logoutBtn').style.display = 'none';
+            document.getElementById('adminBadge').classList.remove('active');
+            document.getElementById('welcomeName').textContent = '';
+            document.getElementById('salesReport').classList.remove('active');
+            document.getElementById('recentOrders').style.display = 'none';
+            document.getElementById('orderSection').classList.remove('active');
+            document.getElementById('myOrders').classList.remove('active');
+            document.getElementById('sellerLogin').classList.remove('active');
+            document.getElementById('adminLogin').classList.remove('active');
+            document.getElementById('sellerLogin').classList.remove('active');
+        }
+
+        function showStoreForSeller(store) {
+            document.querySelectorAll('.store-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.store-tab').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.stock-control').forEach(c => c.classList.remove('active'));
+            const storeMap = { 'Kantin Emak': 'toko1', 'Kantin Umi': 'toko2', 'Kantin Teteh': 'toko3' };
+            const storeId = storeMap[store];
+            document.getElementById('orderSection').classList.add('active');
+            renderOrders();
+            document.getElementById('stock-control-' + storeId).classList.add('active');
+            document.getElementById(storeId).classList.add('active');
+        }
+
+        function updateStock(itemName) {
+            const inputId = 'stock-input-' + itemName;
+            const newStock = parseInt(document.getElementById(inputId).value);
+            if (isNaN(newStock) || newStock < 0) { alert('Stok tidak boleh negatif!'); return; }
+            stockData[itemName] = newStock;
+            updateStockDisplay(itemName);
+            saveToStorage();
+            alert('Stok ' + itemName + ' berhasil diupdate menjadi ' + newStock);
+        }
+
+        function updateStockDisplay(itemName) {
+            const stockBadge = document.getElementById('stock-' + itemName);
+            if (stockBadge) {
+                const stock = stockData[itemName];
+                if (stock <= 0) { stockBadge.className = 'stock-info empty'; stockBadge.textContent = 'Stok: Habis'; }
+                else { stockBadge.className = 'stock-info ready'; stockBadge.textContent = 'Stok: ' + stock; }
+            }
+        }
+
+        function renderOrders() {
+            const orderList = document.getElementById('orderList');
+            if (!currentUser || !currentUser.store) { orderList.innerHTML = '<div class="order-empty">Silakan login sebagai seller untuk melihat pesanan</div>'; return; }
+            const storeOrders = orders.filter(o => o.store === currentUser.store);
+            if (storeOrders.length === 0) { orderList.innerHTML = '<div class="order-empty">Belum ada pesanan masuk</div>'; return; }
+            let ordersHTML = '';
+            storeOrders.forEach((order) => {
+                let itemsHTML = '';
+                order.items.forEach(item => { itemsHTML += '<div class="order-item"><span>' + item.name + ' x' + item.quantity + '</span><span>Rp ' + (item.price * item.quantity).toLocaleString('id-ID') + '</span></div>'; });
+                const orderIndex = orders.indexOf(order);
+                const statusBadge = order.status === 'ready' ? '<span class="order-status ready">✓ SIAP</span>' : '<span class="order-status pending">⏳ MENUNGGU</span>';
+                const readyBtn = order.status === 'ready' ? '<button class="order-status-btn" disabled>✓ Sudah Siap</button>' : '<button class="order-status-btn" onclick="markOrderReady(' + orderIndex + ')">✅ Tandai Siap</button>';
+                ordersHTML += '<div class="order-card"><div class="order-header"><span class="order-customer">' + order.customerName + '</span><span class="order-class">' + order.customerClass + '</span>' + statusBadge + '</div><div class="order-items">' + itemsHTML + '</div><div class="order-total">Total: Rp ' + order.total.toLocaleString('id-ID') + '</div><div class="order-time">Waktu: ' + order.time + ' | Pembayaran: ' + order.paymentMethod + '</div>' + readyBtn + '</div>';
+            });
+            orderList.innerHTML = ordersHTML;
+        }
+
+        function renderRecentOrders() {
+            const recentOrderList = document.getElementById('recentOrderList');
+            if (orders.length === 0) { recentOrderList.innerHTML = '<div class="order-empty">Belum ada pesanan masuk</div>'; return; }
+            let ordersHTML = '';
+            const recentOrders = orders.slice().reverse().slice(0, 10);
+            recentOrders.forEach((order) => {
+                let itemsHTML = '';
+                order.items.forEach(item => { itemsHTML += item.name + ' x' + item.quantity + ', '; });
+                const statusClass = order.status === 'ready' ? 'ready' : 'pending';
+                const statusText = order.status === 'ready' ? '✓ SIAP' : '⏳ MENUNGGU';
+                ordersHTML += '<div class="recent-order-card"><div class="recent-order-header"><span class="recent-order-store">🏪 ' + order.store + '</span><span class="recent-order-status ' + statusClass + '">' + statusText + '</span></div><div class="recent-order-items">👤 ' + order.customerName + ' (' + order.customerClass + ')</div><div class="recent-order-items">🛒 ' + itemsHTML.substring(0, itemsHTML.length - 2) + '</div><div class="recent-order-items">💰 Rp ' + order.total.toLocaleString('id-ID') + ' | 🕐 ' + order.time + '</div></div>';
+            });
+            recentOrderList.innerHTML = ordersHTML;
+        }
+
+        function markOrderReady(orderIndex) {
+            if (orders[orderIndex]) {
+                const customerName = orders[orderIndex].customerName;
+                orders[orderIndex].status = 'ready';
+                saveToStorage();
+                alert('Pesanan telah ditandai sebagai SIAP! 🎉');
+                renderOrders();
+                showReadyNotification(customerName);
+            }
+        }
+
+        function showReadyNotification(customerName) {
+            const existingNotification = document.getElementById('readyNotification');
+            if (existingNotification) existingNotification.remove();
+            const notification = document.createElement('div');
+            notification.id = 'readyNotification';
+            notification.className = 'notification-badge';
+            notification.innerHTML = '🎉 Pesanan SIAP! Silakan mengambil di kantin';
+            notification.onclick = function() { this.remove(); };
+            document.body.appendChild(notification);
+            setTimeout(() => { const notif = document.getElementById('readyNotification'); if (notif) notif.remove(); }, 15000);
+        }
+
+        function renderMyOrders() {
+            const myOrderList = document.getElementById('myOrderList');
+            const customerName = document.getElementById('customerName') ? document.getElementById('customerName').value : '';
+            if (!customerName) { myOrderList.innerHTML = '<div class="order-empty">Silakan masukkan nama saat checkout untuk melihat pesanan Anda</div>'; return; }
+            const studentOrders = orders.filter(o => o.customerName.toLowerCase() === customerName.toLowerCase());
+            if (studentOrders.length === 0) { myOrderList.innerHTML = '<div class="order-empty">Belum ada pesanan</div>'; return; }
+            let ordersHTML = '';
+            studentOrders.slice().reverse().forEach((order) => {
+                let itemsHTML = '';
+                order.items.forEach(item => { itemsHTML += '<div class="order-item"><span>' + item.name + ' x' + item.quantity + '</span><span>Rp ' + (item.price * item.quantity).toLocaleString('id-ID') + '</span></div>'; });
+                const statusClass = order.status === 'ready' ? 'ready' : '';
+                const statusText = order.status === 'ready' ? '✓ SIAP' : '⏳ MENUNGGU';
+                const statusLabel = order.status === 'ready' ? 'ready' : 'pending';
+                ordersHTML += '<div class="my-order-card ' + statusClass + '"><div class="my-order-header"><span class="my-order-store">🏪 ' + order.store + '</span><span class="my-order-status ' + statusLabel + '">' + statusText + '</span></div><div class="order-items">' + itemsHTML + '</div><div class="order-total">Total: Rp ' + order.total.toLocaleString('id-ID') + '</div><div class="order-time">Waktu: ' + order.time + ' | Pembayaran: ' + order.paymentMethod + '</div></div>';
+            });
+            myOrderList.innerHTML = ordersHTML;
+        }
+        
+        loadFromStorage();
